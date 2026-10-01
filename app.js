@@ -108,36 +108,56 @@
       new Promise((resolve) => setTimeout(resolve, 8000)),
     ]);
 
-    if (typeof html2pdf !== "function") {
+    if (typeof html2canvas !== "function" || !window.jspdf || typeof window.jspdf.jsPDF !== "function") {
       throw new Error("تعذر تحميل مكتبة إنشاء PDF. تحقق من اتصال الإنترنت ثم أعد المحاولة.");
     }
 
-    const pdfBlob = await html2pdf()
-      .set({
-        margin: [8, 10, 12, 10],
-        image: { type: "jpeg", quality: 0.94 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          allowTaint: false,
-          backgroundColor: "#ffffff",
-          onclone: (clonedDocument) => {
-            const clonedReport = clonedDocument.getElementById("pdf-report");
-            if (!clonedReport) {
-              throw new Error("تعذر تجهيز معاينة التقرير للطباعة.");
-            }
-            clonedReport.style.position = "static";
-            clonedReport.style.top = "auto";
-            clonedReport.style.left = "auto";
-            clonedReport.style.width = "190mm";
-            clonedReport.style.margin = "0";
-          },
+    const captureReport = report.cloneNode(true);
+    captureReport.id = "pdf-report-capture";
+    captureReport.style.position = "static";
+    captureReport.style.top = "auto";
+    captureReport.style.left = "auto";
+    captureReport.style.width = "190mm";
+    captureReport.style.margin = "0";
+    captureReport.style.opacity = "0";
+    report.after(captureReport);
+    let pdfBlob;
+    try {
+      const canvas = await html2canvas(captureReport, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
+        onclone: (clonedDocument) => {
+          clonedDocument.querySelectorAll("#pdf-report-capture").forEach((reportClone) => {
+            reportClone.style.opacity = "1";
+          });
         },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["css", "legacy"], avoid: [".pdf-header", ".pdf-title", ".pdf-info div", ".pdf-section", ".pdf-photo", ".pdf-signatures"] },
-      })
-      .from(report)
-      .outputPdf("blob");
+      });
+      const pdf = new window.jspdf.jsPDF({
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait",
+      });
+      const pageWidth = 190;
+      const pageHeight = 277;
+      const scale = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
+      const imageWidth = canvas.width * scale;
+      const imageHeight = canvas.height * scale;
+      const imageX = 10 + (pageWidth - imageWidth) / 2;
+      const imageY = 8 + (pageHeight - imageHeight) / 2;
+      pdf.addImage(
+        canvas.toDataURL("image/jpeg", 0.94),
+        "JPEG",
+        imageX,
+        imageY,
+        imageWidth,
+        imageHeight,
+      );
+      pdfBlob = pdf.output("blob");
+    } finally {
+      captureReport.remove();
+    }
 
     if (!(pdfBlob instanceof Blob) || pdfBlob.size === 0 || pdfBlob.type !== "application/pdf") {
       throw new Error("تعذر إنشاء ملف PDF صالح. أعد المحاولة.");
