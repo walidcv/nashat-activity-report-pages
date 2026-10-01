@@ -116,7 +116,23 @@
       .set({
         margin: [8, 10, 12, 10],
         image: { type: "jpeg", quality: 0.94 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: false, backgroundColor: "#ffffff" },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          backgroundColor: "#ffffff",
+          onclone: (clonedDocument) => {
+            const clonedReport = clonedDocument.getElementById("pdf-report");
+            if (!clonedReport) {
+              throw new Error("تعذر تجهيز معاينة التقرير للطباعة.");
+            }
+            clonedReport.style.position = "static";
+            clonedReport.style.top = "auto";
+            clonedReport.style.left = "auto";
+            clonedReport.style.width = "190mm";
+            clonedReport.style.margin = "0";
+          },
+        },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
         pagebreak: { mode: ["css", "legacy"], avoid: [".pdf-header", ".pdf-title", ".pdf-info div", ".pdf-section", ".pdf-photo", ".pdf-signatures"] },
       })
