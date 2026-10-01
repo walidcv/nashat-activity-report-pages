@@ -4,11 +4,9 @@
   const status = document.getElementById("status-message");
   const error = document.getElementById("error-message");
   const report = document.getElementById("pdf-report");
-  const downloadLink = document.getElementById("download-link");
   const logoUrl = "./moe-logo.svg";
   const maxImageBytes = 5 * 1024 * 1024;
   const maxRequestBytes = 16 * 1024 * 1024;
-  let currentPdfUrl = null;
 
   const fields = [
     ["school_name", "اسم المدرسة"],
@@ -113,7 +111,6 @@
       throw new Error("تعذر تحميل مكتبة إنشاء PDF. تحقق من اتصال الإنترنت ثم أعد المحاولة.");
     }
 
-    const filename = `activity_report_${new Date().toISOString().slice(0, 10).replaceAll("-", "")}.pdf`;
     const pdfBlob = await html2pdf()
       .set({
         margin: [8, 10, 12, 10],
@@ -129,11 +126,7 @@
       throw new Error("تعذر إنشاء ملف PDF صالح. أعد المحاولة.");
     }
 
-    if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
-    currentPdfUrl = URL.createObjectURL(pdfBlob);
-    downloadLink.href = currentPdfUrl;
-    downloadLink.download = filename;
-    downloadLink.hidden = false;
+    return URL.createObjectURL(pdfBlob);
   }
 
   document.getElementById("report-date").value = new Intl.DateTimeFormat("ar-SA", {
@@ -146,11 +139,11 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     error.hidden = true;
-    downloadLink.hidden = true;
     status.hidden = false;
     status.textContent = "";
     button.disabled = true;
-    button.textContent = "جارٍ تجهيز التقرير...";
+    button.textContent = "جارٍ إنشاء التقرير...";
+    const previewWindow = window.open("about:blank", "_blank");
 
     try {
       const values = getValues();
@@ -173,9 +166,14 @@
 
       status.textContent = "جارٍ إنشاء ملف PDF على جهازك؛ لا تغلق الصفحة.";
       const images = await Promise.all(uploads.map(compressImage));
-      await buildReport(values, images);
-      status.textContent = "تم تجهيز التقرير. اضغط على الزر أدناه لحفظ ملف PDF على جهازك.";
+      const pdfUrl = await buildReport(values, images);
+      if (previewWindow) {
+        previewWindow.location.href = pdfUrl;
+      } else {
+        window.location.assign(pdfUrl);
+      }
     } catch (exception) {
+      if (previewWindow) previewWindow.close();
       setError(exception instanceof Error ? exception.message : "تعذر إنشاء التقرير على هذا الجهاز.");
       status.hidden = true;
     } finally {
@@ -184,7 +182,4 @@
     }
   });
 
-  window.addEventListener("pagehide", () => {
-    if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
-  });
 })();

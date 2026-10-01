@@ -159,22 +159,6 @@
       .submit-row button { width: 100%; }
     }
 
-      .download-link {
-        display: inline-flex;
-        min-height: 48px;
-        align-items: center;
-        justify-content: center;
-        margin-top: 12px;
-        padding: 0 20px;
-        border-radius: 12px;
-        background: var(--navy);
-        color: var(--white);
-        font-size: 15px;
-        font-weight: 700;
-        text-decoration: none;
-      }
-      .download-link:hover { background: #102638; }
-
       .pdf-report {
       position: fixed;
       top: 0;
@@ -229,7 +213,7 @@
     @media print { .pdf-report { position: static; left: auto; width: 190mm; } }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" defer></script>
-  <script src="app.js?v=20261001-0813" defer></script>
+  <script src="app.js?v=20261001-0901" defer></script>
 </head>
 <body>
   <main class="page-shell">
@@ -285,7 +269,6 @@
         <div>
           <p>يُنشأ ملف PDF على جهازك؛ لا تُرفع بياناتك أو صورك إلى خادم.</p>
           <p id="status-message" class="status" role="status" aria-live="polite" hidden></p>
-          <a id="download-link" class="download-link" hidden>تنزيل ملف التقرير PDF</a>
         </div>
         <button id="download-button" type="submit"><span aria-hidden="true">↓</span> تنزيل التقرير PDF</button>
       </div>
