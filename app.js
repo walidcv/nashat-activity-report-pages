@@ -117,7 +117,12 @@
     captureReport.style.position = "static";
     captureReport.style.top = "auto";
     captureReport.style.left = "auto";
-    captureReport.style.width = "190mm";
+    captureReport.style.width = "200mm";
+    captureReport.style.height = "287mm";
+    captureReport.style.display = "flex";
+    captureReport.style.flexDirection = "column";
+    captureReport.style.justifyContent = "space-between";
+    captureReport.style.gap = "2mm";
     captureReport.style.margin = "0";
     captureReport.style.opacity = "0";
     report.after(captureReport);
@@ -139,13 +144,13 @@
         format: "a4",
         orientation: "portrait",
       });
-      const pageWidth = 190;
-      const pageHeight = 277;
+      const pageWidth = 200;
+      const pageHeight = 287;
       const scale = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
       const imageWidth = canvas.width * scale;
       const imageHeight = canvas.height * scale;
-      const imageX = 10 + (pageWidth - imageWidth) / 2;
-      const imageY = 8 + (pageHeight - imageHeight) / 2;
+      const imageX = 5 + (pageWidth - imageWidth) / 2;
+      const imageY = 5 + (pageHeight - imageHeight) / 2;
       pdf.addImage(
         canvas.toDataURL("image/jpeg", 0.94),
         "JPEG",
