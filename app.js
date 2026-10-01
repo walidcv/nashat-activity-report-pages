@@ -234,13 +234,13 @@
       downloadLink.href = currentPdfUrl;
       downloadLink.hidden = false;
       showInlinePreview(currentPdfUrl);
-      status.textContent = "اكتملت معاينة التقرير.";
+      status.textContent = "هذه معاينة التقرير. استخدم «مشاركة PDF» أو «تنزيل ملف PDF» من أعلى الصفحة.";
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : String(exception));
       status.hidden = true;
     } finally {
       button.disabled = false;
-      button.innerHTML = '<span aria-hidden="true">↓</span> تنزيل التقرير PDF';
+      button.textContent = "إنشاء التقرير ومعاينته";
     }
   });
 

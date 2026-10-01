@@ -219,7 +219,7 @@
     @media print { .pdf-report { position: static; left: auto; width: 190mm; } }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" defer></script>
-  <script src="app.js?v=20261001-1500" defer></script>
+  <script src="app.js?v=20261001-1600" defer></script>
 </head>
 <body>
   <main class="page-shell">
@@ -277,15 +277,15 @@
           <p id="status-message" class="status" role="status" aria-live="polite" hidden></p>
           <a id="pdf-download-link" class="download-link" href="#" download="activity-report.pdf" hidden>تنزيل ملف PDF</a>
         </div>
-        <button id="download-button" type="submit"><span aria-hidden="true">↓</span> تنزيل التقرير PDF</button>
+        <button id="download-button" type="submit">إنشاء التقرير ومعاينته</button>
       </div>
     </form>
     <footer>حقوق البرنامج محفوظة لدى أ/ وليد بن عبدالعزيز البليهد</footer>
   </main>
   <section id="inline-preview" class="inline-preview" hidden>
     <nav class="preview-actions" aria-label="خيارات التقرير">
-      <button id="inline-share-report" type="button">مشاركة التقرير</button>
-      <a id="inline-download-report" download="activity-report.pdf">تنزيل PDF</a>
+      <button id="inline-share-report" type="button">مشاركة PDF</button>
+      <a id="inline-download-report" download="activity-report.pdf">تنزيل ملف PDF</a>
       <span id="inline-share-status" role="status" aria-live="polite"></span>
     </nav>
     <main id="inline-preview-report" class="pdf-report"></main>
