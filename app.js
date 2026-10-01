@@ -2,11 +2,13 @@
   const form = document.getElementById("report-form");
   const button = document.getElementById("download-button");
   const status = document.getElementById("status-message");
+  const downloadLink = document.getElementById("pdf-download-link");
   const error = document.getElementById("error-message");
   const report = document.getElementById("pdf-report");
   const logoUrl = "./moe-logo.svg";
   const maxImageBytes = 5 * 1024 * 1024;
   const maxRequestBytes = 16 * 1024 * 1024;
+  let currentPdfUrl = "";
 
   const fields = [
     ["school_name", "اسم المدرسة"],
@@ -138,6 +140,10 @@
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+    currentPdfUrl = "";
+    downloadLink.hidden = true;
+    downloadLink.removeAttribute("href");
     error.hidden = true;
     status.hidden = false;
     status.textContent = "";
@@ -164,8 +170,10 @@
 
       status.textContent = "جارٍ إنشاء ملف PDF على جهازك؛ لا تغلق الصفحة.";
       const images = await Promise.all(uploads.map(compressImage));
-      const pdfUrl = await buildReport(values, images);
-      window.location.assign(pdfUrl);
+      currentPdfUrl = await buildReport(values, images);
+      downloadLink.href = currentPdfUrl;
+      downloadLink.hidden = false;
+      status.textContent = "اكتمل التقرير. اضغط على «تنزيل ملف PDF» لحفظه على جهازك.";
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : "تعذر إنشاء التقرير على هذا الجهاز.");
       status.hidden = true;
