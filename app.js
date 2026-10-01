@@ -152,8 +152,8 @@
       const imageX = 5 + (pageWidth - imageWidth) / 2;
       const imageY = 5 + (pageHeight - imageHeight) / 2;
       pdf.addImage(
-        canvas.toDataURL("image/png"),
-        "PNG",
+        canvas.toDataURL("image/jpeg", 0.98),
+        "JPEG",
         imageX,
         imageY,
         imageWidth,
