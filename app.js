@@ -129,7 +129,7 @@
     let pdfBlob;
     try {
       const canvas = await html2canvas(captureReport, {
-                scale: 3.2,
+        scale: 3.2,
         useCORS: true,
         allowTaint: false,
         backgroundColor: "#ffffff",
@@ -152,8 +152,8 @@
       const imageX = 5 + (pageWidth - imageWidth) / 2;
       const imageY = 5 + (pageHeight - imageHeight) / 2;
       pdf.addImage(
-                canvas.toDataURL("image/png"),
-                "PNG",
+        canvas.toDataURL("image/png"),
+        "PNG",
         imageX,
         imageY,
         imageWidth,
