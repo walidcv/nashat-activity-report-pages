@@ -132,74 +132,26 @@
     return pdfBlob;
   }
 
-  function bindShareButton(previewDocument, pdfUrl, button, status) {
+  function bindShareButton(button, status) {
     button.addEventListener("click", async () => {
       try {
-        const shareWindow = previewDocument.defaultView;
-        if (
-          !shareWindow ||
-          typeof shareWindow.navigator.share !== "function" ||
-          typeof shareWindow.navigator.canShare !== "function"
-        ) {
+        if (typeof navigator.share !== "function" || typeof navigator.canShare !== "function") {
           status.textContent = "استخدم زر «تنزيل PDF» ثم شارك الملف من جهازك.";
           return;
         }
-        const pdfResponse = await shareWindow.fetch(pdfUrl);
-        if (!pdfResponse.ok) {
-          throw new Error("تعذر تجهيز ملف التقرير للمشاركة.");
-        }
-        const pdfBlob = await pdfResponse.blob();
-        const file = new shareWindow.File([pdfBlob], "activity-report.pdf", {
+        const file = new File([currentPdfBlob], "activity-report.pdf", {
           type: "application/pdf",
         });
-        if (!shareWindow.navigator.canShare({ files: [file] })) {
+        if (!navigator.canShare({ files: [file] })) {
           status.textContent = "استخدم زر «تنزيل PDF» ثم شارك الملف من جهازك.";
           return;
         }
-        await shareWindow.navigator.share({ files: [file], title: "تقرير النشاط المدرسي" });
+        await navigator.share({ files: [file], title: "تقرير النشاط المدرسي" });
       } catch (exception) {
         if (exception instanceof Error && exception.name === "AbortError") return;
         status.textContent = "تعذرت المشاركة. نزّل الملف ثم شاركه من جهازك.";
       }
     });
-  }
-
-  function populatePreview(previewDocument, pdfUrl) {
-    const styles = document.querySelector("style").textContent;
-    previewDocument.open();
-    previewDocument.write(`<!doctype html>
-      <html lang="ar" dir="rtl">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>معاينة تقرير النشاط</title>
-        <style>${styles}
-          body { margin: 0; background: #f3f7f8; }
-          .preview-actions { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 14px; background: #fff; box-shadow: 0 2px 12px #17324d22; }
-          .preview-actions button, .preview-actions a { display: inline-block; padding: 12px 18px; border: 0; border-radius: 10px; background: #168c86; color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
-          .pdf-report { position: static !important; top: auto !important; left: auto !important; width: min(190mm, calc(100% - 28px)) !important; margin: 18px auto !important; padding: 8px !important; box-shadow: 0 8px 28px #17324d20; }
-        </style>
-      </head>
-      <body>
-        <nav class="preview-actions" aria-label="خيارات التقرير">
-          <button id="share-report" type="button">مشاركة التقرير</button>
-          <a id="download-report" download="activity-report.pdf">تنزيل PDF</a>
-          <span id="share-status" role="status" aria-live="polite"></span>
-        </nav>
-        <main id="preview-report" class="pdf-report"></main>
-      </body>
-      </html>`);
-    previewDocument.close();
-
-    previewDocument.getElementById("preview-report").innerHTML = report.innerHTML;
-    const download = previewDocument.getElementById("download-report");
-    download.href = pdfUrl;
-    bindShareButton(
-      previewDocument,
-      pdfUrl,
-      previewDocument.getElementById("share-report"),
-      previewDocument.getElementById("share-status"),
-    );
   }
 
   function showInlinePreview(pdfUrl) {
@@ -209,8 +161,6 @@
     document.getElementById("inline-preview-report").innerHTML = report.innerHTML;
     document.getElementById("inline-download-report").href = pdfUrl;
     bindShareButton(
-      document,
-      pdfUrl,
       document.getElementById("inline-share-report"),
       document.getElementById("inline-share-status"),
     );
@@ -258,7 +208,6 @@
     status.textContent = "";
     button.disabled = true;
     button.textContent = "جارٍ إنشاء التقرير...";
-    let previewWindow = null;
     try {
       const values = getValues();
       if (!String(values.school_name || "").trim() || !String(values.title || "").trim()) {
@@ -278,25 +227,16 @@
         throw new Error("أحد الملفات المرفقة ليس صورة صالحة.");
       }
 
-      previewWindow = window.open("", "_blank");
-      if (previewWindow) {
-        previewWindow.document.write("<!doctype html><html lang=\"ar\" dir=\"rtl\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>إنشاء التقرير</title><body style=\"font-family:Arial,sans-serif;padding:24px;text-align:center\">جارٍ تجهيز معاينة التقرير...</body></html>");
-      }
       status.textContent = "جارٍ إنشاء ملف PDF على جهازك؛ لا تغلق الصفحة.";
       const images = await Promise.all(uploads.map(compressImage));
       currentPdfBlob = await buildReport(values, images);
       currentPdfUrl = URL.createObjectURL(currentPdfBlob);
       downloadLink.href = currentPdfUrl;
       downloadLink.hidden = false;
-      if (previewWindow && !previewWindow.closed) {
-        populatePreview(previewWindow.document, currentPdfUrl);
-      } else {
-        showInlinePreview(currentPdfUrl);
-      }
+      showInlinePreview(currentPdfUrl);
       status.textContent = "اكتملت معاينة التقرير.";
     } catch (exception) {
-      if (previewWindow && !previewWindow.closed) previewWindow.close();
-      setError(exception instanceof Error ? exception.message : "تعذر إنشاء التقرير على هذا الجهاز.");
+      setError(exception instanceof Error ? exception.message : String(exception));
       status.hidden = true;
     } finally {
       button.disabled = false;
