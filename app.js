@@ -4,7 +4,7 @@
   const status = document.getElementById("status-message");
   const error = document.getElementById("error-message");
   const report = document.getElementById("pdf-report");
-  const logoUrl = "https://www.moe.gov.sa/Style%20Library/portal/assets/images/moe-logo.svg";
+  const logoUrl = "./moe-logo.svg";
   const maxImageBytes = 5 * 1024 * 1024;
   const maxRequestBytes = 16 * 1024 * 1024;
 
