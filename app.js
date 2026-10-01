@@ -4,9 +4,11 @@
   const status = document.getElementById("status-message");
   const error = document.getElementById("error-message");
   const report = document.getElementById("pdf-report");
+  const downloadLink = document.getElementById("download-link");
   const logoUrl = "./moe-logo.svg";
   const maxImageBytes = 5 * 1024 * 1024;
   const maxRequestBytes = 16 * 1024 * 1024;
+  let currentPdfUrl = null;
 
   const fields = [
     ["school_name", "اسم المدرسة"],
@@ -111,17 +113,27 @@
       throw new Error("تعذر تحميل مكتبة إنشاء PDF. تحقق من اتصال الإنترنت ثم أعد المحاولة.");
     }
 
-    await html2pdf()
+    const filename = `activity_report_${new Date().toISOString().slice(0, 10).replaceAll("-", "")}.pdf`;
+    const pdfBlob = await html2pdf()
       .set({
         margin: [8, 10, 12, 10],
-        filename: `activity_report_${new Date().toISOString().slice(0, 10).replaceAll("-", "")}.pdf`,
         image: { type: "jpeg", quality: 0.94 },
         html2canvas: { scale: 2, useCORS: true, allowTaint: false, backgroundColor: "#ffffff" },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
         pagebreak: { mode: ["css", "legacy"], avoid: [".pdf-header", ".pdf-title", ".pdf-info div", ".pdf-section", ".pdf-photo", ".pdf-signatures"] },
       })
       .from(report)
-      .save();
+      .outputPdf("blob");
+
+    if (!(pdfBlob instanceof Blob) || pdfBlob.size === 0 || pdfBlob.type !== "application/pdf") {
+      throw new Error("تعذر إنشاء ملف PDF صالح. أعد المحاولة.");
+    }
+
+    if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+    currentPdfUrl = URL.createObjectURL(pdfBlob);
+    downloadLink.href = currentPdfUrl;
+    downloadLink.download = filename;
+    downloadLink.hidden = false;
   }
 
   document.getElementById("report-date").value = new Intl.DateTimeFormat("ar-SA", {
@@ -134,6 +146,7 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     error.hidden = true;
+    downloadLink.hidden = true;
     status.hidden = false;
     status.textContent = "";
     button.disabled = true;
@@ -161,7 +174,7 @@
       status.textContent = "جارٍ إنشاء ملف PDF على جهازك؛ لا تغلق الصفحة.";
       const images = await Promise.all(uploads.map(compressImage));
       await buildReport(values, images);
-      status.textContent = "تم تجهيز التقرير. إذا لم يبدأ التنزيل تلقائياً، تحقق من قائمة التنزيلات في المتصفح.";
+      status.textContent = "تم تجهيز التقرير. اضغط على الزر أدناه لحفظ ملف PDF على جهازك.";
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : "تعذر إنشاء التقرير على هذا الجهاز.");
       status.hidden = true;
@@ -169,5 +182,9 @@
       button.disabled = false;
       button.innerHTML = '<span aria-hidden="true">↓</span> تنزيل التقرير PDF';
     }
+  });
+
+  window.addEventListener("pagehide", () => {
+    if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
   });
 })();
