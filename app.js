@@ -7,7 +7,7 @@
   const logoUrl = new URL("./moe-logo.svg", window.location.href).href;
   const maxImageBytes = 5 * 1024 * 1024;
   const maxRequestBytes = 16 * 1024 * 1024;
-  let currentPdfUrl = "";
+  let currentPdfBlob = null;
 
   const fields = [
     ["school_name", "اسم المدرسة"],
@@ -130,12 +130,77 @@
     return pdfBlob;
   }
 
-  function showInlinePreview(pdfUrl) {
+  function showInlinePreview() {
     const preview = document.getElementById("inline-preview");
     preview.hidden = false;
     document.querySelector(".page-shell").hidden = true;
-    document.getElementById("pdf-viewer").src = pdfUrl;
+    document.getElementById("preview-status").textContent = "جارٍ عرض ملف PDF...";
+    document.getElementById("pdf-pages").replaceChildren();
+    renderPdfPreview(currentPdfBlob);
+    window.scrollTo(0, 0);
   }
+
+  async function renderPdfPreview(pdfBlob) {
+    const status = document.getElementById("preview-status");
+    const pagesContainer = document.getElementById("pdf-pages");
+    try {
+      if (!window.pdfjsLib) {
+        throw new Error("تعذر تحميل عارض PDF. تحقق من اتصال الإنترنت وأعد فتح الصفحة.");
+      }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      const pdf = await window.pdfjsLib.getDocument({ data: await pdfBlob.arrayBuffer() }).promise;
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+        const page = await pdf.getPage(pageNumber);
+        const baseViewport = page.getViewport({ scale: 1 });
+        const availableWidth = Math.max(280, pagesContainer.clientWidth - 16);
+        const scale = Math.min(1.4, availableWidth / baseViewport.width);
+        const viewport = page.getViewport({ scale });
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const pageElement = document.createElement("div");
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) {
+          throw new Error("تعذر عرض صفحات PDF على هذا الجهاز.");
+        }
+        pageElement.className = "pdf-page";
+        canvas.width = Math.ceil(viewport.width * pixelRatio);
+        canvas.height = Math.ceil(viewport.height * pixelRatio);
+        canvas.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
+        pageElement.append(canvas);
+        pagesContainer.append(pageElement);
+        await page.render({
+          canvasContext: context,
+          viewport,
+          transform: pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0],
+        }).promise;
+      }
+      status.textContent = `معاينة PDF · ${pdf.numPages} صفحة`;
+    } catch (exception) {
+      status.textContent =
+        exception instanceof Error ? exception.message : "تعذر عرض ملف PDF.";
+    }
+  }
+
+  document.getElementById("share-pdf").addEventListener("click", async () => {
+    const status = document.getElementById("preview-status");
+    try {
+      if (!currentPdfBlob || typeof navigator.share !== "function") {
+        throw new Error("مشاركة ملفات PDF غير مدعومة في هذا المتصفح. افتح الصفحة في Safari أو Chrome.");
+      }
+      const file = new File([currentPdfBlob], "activity-report.pdf", {
+        type: "application/pdf",
+      });
+      if (typeof navigator.canShare === "function" && !navigator.canShare({ files: [file] })) {
+        throw new Error("مشاركة ملفات PDF غير مدعومة على هذا الجهاز.");
+      }
+      await navigator.share({ files: [file], title: "تقرير النشاط المدرسي" });
+    } catch (exception) {
+      if (exception instanceof Error && exception.name === "AbortError") return;
+      status.textContent =
+        exception instanceof Error ? exception.message : "تعذرت مشاركة ملف PDF.";
+    }
+  });
 
   document.getElementById("report-date").value = new Intl.DateTimeFormat("ar-SA", {
     weekday: "long",
@@ -146,8 +211,7 @@
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
-    currentPdfUrl = "";
+    currentPdfBlob = null;
     error.hidden = true;
     status.hidden = false;
     status.textContent = "";
@@ -175,8 +239,8 @@
       status.textContent = "جارٍ إنشاء ملف PDF على جهازك؛ لا تغلق الصفحة.";
       const images = await Promise.all(uploads.map(compressImage));
       const pdfBlob = await buildReport(values, images);
-      currentPdfUrl = URL.createObjectURL(pdfBlob);
-      showInlinePreview(currentPdfUrl);
+      currentPdfBlob = pdfBlob;
+      showInlinePreview();
       status.textContent = "هذه معاينة ملف PDF. استخدم أدوات عارض PDF لمشاركته أو حفظه.";
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : String(exception));

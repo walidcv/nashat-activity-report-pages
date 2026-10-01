@@ -145,7 +145,12 @@
     button:disabled { opacity: .65; cursor: wait; }
     button span { padding-left: 7px; font-size: 20px; }
     .inline-preview { width: 100%; min-height: 100vh; background: #f3f7f8; }
-    .pdf-viewer { display: block; width: 100%; height: 100vh; min-height: 650px; border: 0; background: white; }
+    .preview-toolbar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: center; padding: 12px; background: white; box-shadow: 0 2px 12px #17324d22; }
+    .preview-toolbar button { min-height: 44px; }
+    .preview-status { margin: 0; padding: 8px 16px; color: var(--muted); text-align: center; }
+    .pdf-pages { display: grid; justify-items: center; gap: 14px; padding: 14px 8px 28px; }
+    .pdf-page { width: min(100%, 820px); overflow: hidden; background: white; box-shadow: 0 4px 18px #17324d20; }
+    .pdf-page canvas { display: block; width: 100%; height: auto; }
     .alert { margin: 0 0 18px; padding: 14px 17px; border: 1px solid #f2c1bb; border-radius: 12px; background: #fff5f3; color: #a52b20; }
     footer { padding: 24px 0 5px; color: var(--muted); font-size: 12px; text-align: center; }
 
@@ -159,7 +164,7 @@
       .upload-card { min-height: 125px; }
       .submit-row { align-items: stretch; flex-direction: column; }
       .submit-row button { width: 100%; }
-      .pdf-viewer { height: 100dvh; min-height: 480px; }
+      .pdf-pages { gap: 10px; padding: 10px 5px 20px; }
     }
 
       .pdf-report {
@@ -216,7 +221,8 @@
     @media print { .pdf-report { position: static; left: auto; width: 190mm; } }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" defer></script>
-  <script src="app.js?v=20261001-1800" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+  <script src="app.js?v=20261001-1900" defer></script>
 </head>
 <body>
   <main class="page-shell">
@@ -279,7 +285,11 @@
     <footer>حقوق البرنامج محفوظة لدى أ/ وليد بن عبدالعزيز البليهد</footer>
   </main>
   <section id="inline-preview" class="inline-preview" hidden>
-    <iframe id="pdf-viewer" class="pdf-viewer" title="معاينة تقرير النشاط بصيغة PDF"></iframe>
+    <div class="preview-toolbar">
+      <button id="share-pdf" type="button">مشاركة ملف PDF</button>
+    </div>
+    <p id="preview-status" class="preview-status" role="status" aria-live="polite"></p>
+    <div id="pdf-pages" class="pdf-pages" aria-label="صفحات تقرير النشاط بصيغة PDF"></div>
   </section>
   <section id="pdf-report" class="pdf-report" aria-hidden="true"></section>
 </body>
