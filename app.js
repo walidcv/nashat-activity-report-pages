@@ -9,6 +9,7 @@
   const maxImageBytes = 5 * 1024 * 1024;
   const maxRequestBytes = 16 * 1024 * 1024;
   let currentPdfUrl = "";
+  let currentPdfBlob = null;
 
   const fields = [
     ["school_name", "اسم المدرسة"],
@@ -128,8 +129,31 @@
       throw new Error("تعذر إنشاء ملف PDF صالح. أعد المحاولة.");
     }
 
-    return URL.createObjectURL(pdfBlob);
+    return pdfBlob;
   }
+
+  downloadLink.addEventListener("click", async (event) => {
+    if (
+      !currentPdfBlob ||
+      typeof navigator.share !== "function" ||
+      typeof navigator.canShare !== "function"
+    ) {
+      return;
+    }
+
+    const file = new File([currentPdfBlob], "activity-report.pdf", {
+      type: "application/pdf",
+    });
+    if (!navigator.canShare({ files: [file] })) return;
+
+    event.preventDefault();
+    try {
+      await navigator.share({ files: [file], title: "تقرير النشاط المدرسي" });
+    } catch (exception) {
+      if (exception instanceof DOMException && exception.name === "AbortError") return;
+      setError("تعذرت مشاركة ملف PDF. جرّب رابط التنزيل مرة أخرى.");
+    }
+  });
 
   document.getElementById("report-date").value = new Intl.DateTimeFormat("ar-SA", {
     weekday: "long",
@@ -142,6 +166,7 @@
     event.preventDefault();
     if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
     currentPdfUrl = "";
+    currentPdfBlob = null;
     downloadLink.hidden = true;
     downloadLink.removeAttribute("href");
     error.hidden = true;
@@ -170,7 +195,8 @@
 
       status.textContent = "جارٍ إنشاء ملف PDF على جهازك؛ لا تغلق الصفحة.";
       const images = await Promise.all(uploads.map(compressImage));
-      currentPdfUrl = await buildReport(values, images);
+      currentPdfBlob = await buildReport(values, images);
+      currentPdfUrl = URL.createObjectURL(currentPdfBlob);
       downloadLink.href = currentPdfUrl;
       downloadLink.hidden = false;
       status.textContent = "اكتمل التقرير. اضغط على «تنزيل ملف PDF» لحفظه على جهازك.";
