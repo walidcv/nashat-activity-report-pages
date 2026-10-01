@@ -146,6 +146,10 @@
     button span { padding-left: 7px; font-size: 20px; }
     .download-link { display: inline-block; padding: 14px 22px; border-radius: 12px; background: var(--accent); color: white; font-weight: 700; text-align: center; text-decoration: none; }
     .download-link:hover { background: #11756f; }
+    .preview-actions { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 14px; background: #fff; box-shadow: 0 2px 12px #17324d22; }
+    .preview-actions button, .preview-actions a { display: inline-block; padding: 12px 18px; border: 0; border-radius: 10px; background: #168c86; color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+    .inline-preview { min-height: 100vh; padding: 0 0 24px; background: #f3f7f8; }
+    .inline-preview .pdf-report { position: static; top: auto; left: auto; width: min(190mm, calc(100% - 28px)); margin: 18px auto; padding: 8px; box-shadow: 0 8px 28px #17324d20; }
     .alert { margin: 0 0 18px; padding: 14px 17px; border: 1px solid #f2c1bb; border-radius: 12px; background: #fff5f3; color: #a52b20; }
     footer { padding: 24px 0 5px; color: var(--muted); font-size: 12px; text-align: center; }
 
@@ -215,7 +219,7 @@
     @media print { .pdf-report { position: static; left: auto; width: 190mm; } }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" defer></script>
-  <script src="app.js?v=20261001-1300" defer></script>
+  <script src="app.js?v=20261001-1400" defer></script>
 </head>
 <body>
   <main class="page-shell">
@@ -278,6 +282,14 @@
     </form>
     <footer>حقوق البرنامج محفوظة لدى أ/ وليد بن عبدالعزيز البليهد</footer>
   </main>
+  <section id="inline-preview" class="inline-preview" hidden>
+    <nav class="preview-actions" aria-label="خيارات التقرير">
+      <button id="inline-share-report" type="button">مشاركة التقرير</button>
+      <a id="inline-download-report" download="activity-report.pdf">تنزيل PDF</a>
+      <span id="inline-share-status" role="status" aria-live="polite"></span>
+    </nav>
+    <main id="inline-preview-report" class="pdf-report"></main>
+  </section>
   <section id="pdf-report" class="pdf-report" aria-hidden="true"></section>
 </body>
 </html>
