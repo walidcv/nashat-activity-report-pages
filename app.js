@@ -2,14 +2,12 @@
   const form = document.getElementById("report-form");
   const button = document.getElementById("download-button");
   const status = document.getElementById("status-message");
-  const downloadLink = document.getElementById("pdf-download-link");
   const error = document.getElementById("error-message");
   const report = document.getElementById("pdf-report");
   const logoUrl = new URL("./moe-logo.svg", window.location.href).href;
   const maxImageBytes = 5 * 1024 * 1024;
   const maxRequestBytes = 16 * 1024 * 1024;
   let currentPdfUrl = "";
-  let currentPdfBlob = null;
 
   const fields = [
     ["school_name", "اسم المدرسة"],
@@ -132,62 +130,12 @@
     return pdfBlob;
   }
 
-  function bindShareButton(button, status) {
-    button.addEventListener("click", async () => {
-      try {
-        if (typeof navigator.share !== "function" || typeof navigator.canShare !== "function") {
-          status.textContent = "استخدم زر «تنزيل PDF» ثم شارك الملف من جهازك.";
-          return;
-        }
-        const file = new File([currentPdfBlob], "activity-report.pdf", {
-          type: "application/pdf",
-        });
-        if (!navigator.canShare({ files: [file] })) {
-          status.textContent = "استخدم زر «تنزيل PDF» ثم شارك الملف من جهازك.";
-          return;
-        }
-        await navigator.share({ files: [file], title: "تقرير النشاط المدرسي" });
-      } catch (exception) {
-        if (exception instanceof Error && exception.name === "AbortError") return;
-        status.textContent = "تعذرت المشاركة. نزّل الملف ثم شاركه من جهازك.";
-      }
-    });
-  }
-
   function showInlinePreview(pdfUrl) {
     const preview = document.getElementById("inline-preview");
     preview.hidden = false;
     document.querySelector(".page-shell").hidden = true;
-    document.getElementById("inline-preview-report").innerHTML = report.innerHTML;
-    document.getElementById("inline-download-report").href = pdfUrl;
-    bindShareButton(
-      document.getElementById("inline-share-report"),
-      document.getElementById("inline-share-status"),
-    );
+    document.getElementById("pdf-viewer").src = pdfUrl;
   }
-
-  downloadLink.addEventListener("click", async (event) => {
-    if (
-      !currentPdfBlob ||
-      typeof navigator.share !== "function" ||
-      typeof navigator.canShare !== "function"
-    ) {
-      return;
-    }
-
-    const file = new File([currentPdfBlob], "activity-report.pdf", {
-      type: "application/pdf",
-    });
-    if (!navigator.canShare({ files: [file] })) return;
-
-    event.preventDefault();
-    try {
-      await navigator.share({ files: [file], title: "تقرير النشاط المدرسي" });
-    } catch (exception) {
-      if (exception instanceof DOMException && exception.name === "AbortError") return;
-      setError("تعذرت مشاركة ملف PDF. جرّب رابط التنزيل مرة أخرى.");
-    }
-  });
 
   document.getElementById("report-date").value = new Intl.DateTimeFormat("ar-SA", {
     weekday: "long",
@@ -200,9 +148,6 @@
     event.preventDefault();
     if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
     currentPdfUrl = "";
-    currentPdfBlob = null;
-    downloadLink.hidden = true;
-    downloadLink.removeAttribute("href");
     error.hidden = true;
     status.hidden = false;
     status.textContent = "";
@@ -229,18 +174,16 @@
 
       status.textContent = "جارٍ إنشاء ملف PDF على جهازك؛ لا تغلق الصفحة.";
       const images = await Promise.all(uploads.map(compressImage));
-      currentPdfBlob = await buildReport(values, images);
-      currentPdfUrl = URL.createObjectURL(currentPdfBlob);
-      downloadLink.href = currentPdfUrl;
-      downloadLink.hidden = false;
+      const pdfBlob = await buildReport(values, images);
+      currentPdfUrl = URL.createObjectURL(pdfBlob);
       showInlinePreview(currentPdfUrl);
-      status.textContent = "هذه معاينة التقرير. استخدم «مشاركة PDF» أو «تنزيل ملف PDF» من أعلى الصفحة.";
+      status.textContent = "هذه معاينة ملف PDF. استخدم أدوات عارض PDF لمشاركته أو حفظه.";
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : String(exception));
       status.hidden = true;
     } finally {
       button.disabled = false;
-      button.textContent = "إنشاء التقرير ومعاينته";
+      button.textContent = "معاينة التقرير PDF";
     }
   });
 
