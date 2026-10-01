@@ -143,8 +143,6 @@
     status.textContent = "";
     button.disabled = true;
     button.textContent = "جارٍ إنشاء التقرير...";
-    const previewWindow = window.open("about:blank", "_blank");
-
     try {
       const values = getValues();
       if (!String(values.school_name || "").trim() || !String(values.title || "").trim()) {
@@ -167,13 +165,8 @@
       status.textContent = "جارٍ إنشاء ملف PDF على جهازك؛ لا تغلق الصفحة.";
       const images = await Promise.all(uploads.map(compressImage));
       const pdfUrl = await buildReport(values, images);
-      if (previewWindow) {
-        previewWindow.location.href = pdfUrl;
-      } else {
-        window.location.assign(pdfUrl);
-      }
+      window.location.assign(pdfUrl);
     } catch (exception) {
-      if (previewWindow) previewWindow.close();
       setError(exception instanceof Error ? exception.message : "تعذر إنشاء التقرير على هذا الجهاز.");
       status.hidden = true;
     } finally {
