@@ -75,7 +75,7 @@
     const section = (heading, content) => {
       const text = String(content || "").trim();
       if (!text) return "";
-      return `<section class="pdf-section"><h3>${heading}</h3><p>${escapeHtml(text)}</p></section>`;
+      return `<section class="pdf-section"><h3>${heading}</h3><p dir="rtl">${escapeHtml(text)}</p></section>`;
     };
 
     report.innerHTML = `
