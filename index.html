@@ -95,7 +95,7 @@
       text-align: right;
     }
     input:not([type="file"]) { height: 47px; padding: 0 13px; }
-    textarea { min-height: 122px; padding: 12px 13px; line-height: 1.8; resize: vertical; }
+    textarea { min-height: 122px; padding: 12px 13px; direction: rtl; text-align: right; font-family: system-ui, "Noto Sans Arabic", Tahoma, Arial, sans-serif; font-size: 16px; line-height: 1.8; resize: vertical; }
     input:focus, textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(22, 140, 134, 0.12); }
     ::placeholder { color: #a1adba; }
     .photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
@@ -223,7 +223,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
-  <script src="app.js?v=20261001-4000" defer></script>
+  <script src="app.js?v=20261002-4100" defer></script>
 </head>
 <body>
   <main class="page-shell">
@@ -259,8 +259,8 @@
           <span class="step">٢</span>
           <div><h2 id="details-heading">تفاصيل البرنامج</h2><p>اكتب الأهداف والوصف بالتفصيل الذي تحتاجه.</p></div>
         </div>
-        <label class="field"><span>أهداف البرنامج</span><textarea name="goals" rows="5" maxlength="20000" placeholder="اكتب أهداف البرنامج"></textarea></label>
-        <label class="field"><span>وصف البرنامج</span><textarea name="description" rows="6" maxlength="20000" placeholder="اكتب وصف البرنامج"></textarea></label>
+<textarea name="goals" dir="rtl" rows="5"
+<textarea name="description" dir="rtl" rows="6"
       </section>
 
       <section class="card" aria-labelledby="photos-heading">
